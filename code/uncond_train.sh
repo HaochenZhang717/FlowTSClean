@@ -31,8 +31,8 @@ python uncond_train.py \
     --d_model 128 \
     --n_heads 8 \
     \
-    --train_data_path "\"$TRAIN_DATA\"" \
-    --valid_data_path "\"$VALID_DATA\"" \
+    --train_data_path ${TRAIN_DATA} \
+    --valid_data_path ${VALID_DATA} \
     \
     --lr 1e-4 \
     --batch_size 64 \
