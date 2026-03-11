@@ -65,7 +65,7 @@ def uncond_sample(args):
     )
 
     results = {"reals":[], "samples":[]}
-    for batch in test_loader:
+    for batch in tqdm(test_loader):
         signals = batch[0].to(device=device, dtype=torch.float32)
 
         with torch.no_grad():
@@ -78,3 +78,8 @@ def uncond_sample(args):
     results["reals"] = torch.cat(results["reals"])
     results["samples"] = torch.cat(results["samples"])
     torch.save(results, args.output_path)
+
+
+if __name__ == "__main__":
+    args = get_args()
+    uncond_sample(args)
