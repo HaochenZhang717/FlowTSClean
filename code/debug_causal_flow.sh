@@ -27,7 +27,7 @@ CKPT_DIR="/playpen/haochenz/FlowTS/conditional_causal/synth_u_0310"
 # WandB
 # =============================
 WANDB_PROJECT="FlowTS"
-WANDB_RUN="synth_u_text"
+WANDB_RUN="synth_u_text_causal"
 
 # =============================
 # Run training
