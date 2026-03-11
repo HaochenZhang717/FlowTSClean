@@ -82,11 +82,11 @@ def unconditional_trian(args):
 
 
     train_loader = torch.utils.data.DataLoader(
-        train_set, batch_size=args.batch_size,
+        train_set, batch_size=args.batch_size, num_workers=16,
         shuffle=True, drop_last=True,
     )
     val_loader = torch.utils.data.DataLoader(
-        val_set, batch_size=args.batch_size,
+        val_set, batch_size=args.batch_size, num_workers=16,
         shuffle=False, drop_last=False,
     )
 
