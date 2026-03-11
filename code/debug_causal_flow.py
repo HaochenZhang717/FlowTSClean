@@ -156,7 +156,7 @@ class Text2TSDataset(Dataset):
             "target_len": target_len,
             "ts_id": ts_id,
             "block_id": block_id,
-            "image_id": image_id
+            # "image_id": image_id
         }
 
 def save_args_to_jsonl(args, output_path):
@@ -258,7 +258,7 @@ def conditional_trian(args):
         compile=False
     )
 
-    trainer.cond_train(config=vars(args))
+    trainer.cond_causal_train(config=vars(args))
 
 
 
