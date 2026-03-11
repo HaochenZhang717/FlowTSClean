@@ -392,7 +392,6 @@ class Encoder(nn.Module):
 
     def forward(self, input, t, prototype_embeds, padding_masks):
         x = input
-        breakpoint()
         for block_idx in range(len(self.blocks)):
             x, _ = self.blocks[block_idx](x, t, prototype_embeds, mask=padding_masks)
         return x
@@ -568,9 +567,9 @@ class Transformer(nn.Module):
     def forward(self, input, t, history, prototype_embeds, self_attn_mask, cross_attn_mask):
 
         inp_enc = self.encoder_emb(history)
-        print(inp_enc.shape)
-        print(history.shape)
-        breakpoint()
+        # print(inp_enc.shape)
+        # print(history.shape)
+        # breakpoint()
         enc_cond = self.encoder(inp_enc, t, prototype_embeds, padding_masks=self_attn_mask)
 
         inp_dec = self.decoder_emb(input)
