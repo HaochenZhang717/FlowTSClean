@@ -22,7 +22,7 @@ WANDB_RUN="synth_u"
 # =============================
 # Run training
 # =============================
-python train_dspflow.py \
+python uncond_train.py \
     --seq_len 128 \
     --feature_size 1 \
     \
