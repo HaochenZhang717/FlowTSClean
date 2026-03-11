@@ -20,7 +20,7 @@ TS_PATH_VALID="/playpen/haochenz/LitsDatasets/128_len_ts/synthetic_u/valid_ts.np
 TEXT_EMBED_PATH_VALID="/playpen/haochenz/LitsDatasets/128_len_caps_one_per_channel_0309/synth_u/valid_embeds.pt"
 
 
-CKPT_DIR="/playpen/haochenz/FlowTS/unconditional/synth_u_0310"
+CKPT_DIR="/playpen/haochenz/FlowTS/conditional_causal/synth_u_0310"
 
 
 # =============================
