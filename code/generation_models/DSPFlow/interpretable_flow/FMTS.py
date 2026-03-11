@@ -246,9 +246,9 @@ class DSPFlow(nn.Module):
             return self._imputation_loss(signals, missing_signals, missing_signals_mask, attn_mask, noise_mask)
 
         elif mode=="no_context_no_code":
-            signals = batch["signals"]
-            attn_mask = batch["attn_mask"]
-            return self._no_context_no_code_loss(signals, attn_mask)
+            # signals = batch["signals"]
+            # attn_mask = batch["attn_mask"]
+            return self._no_context_no_code_loss(signals=batch, attn_mask=None)
 
         elif mode=="no_code_imputation":
             signals = batch["signals"]

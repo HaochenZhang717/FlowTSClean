@@ -11,11 +11,6 @@ from tqdm import tqdm
 from torch.utils.data import TensorDataset, DataLoader
 
 
-def dict_collate_fn(batch):
-    out = {}
-    for key in batch[0].keys():
-        out[key] = torch.stack([sample[key] for sample in batch], dim=0)
-    return out
 
 
 def save_args_to_jsonl(args, output_path):
@@ -89,12 +84,10 @@ def unconditional_trian(args):
     train_loader = torch.utils.data.DataLoader(
         train_set, batch_size=args.batch_size,
         shuffle=True, drop_last=True,
-        collate_fn = dict_collate_fn,
     )
     val_loader = torch.utils.data.DataLoader(
         val_set, batch_size=args.batch_size,
         shuffle=False, drop_last=False,
-        collate_fn=dict_collate_fn,
     )
 
     optimizer= torch.optim.Adam(model.parameters(), lr=args.lr)
