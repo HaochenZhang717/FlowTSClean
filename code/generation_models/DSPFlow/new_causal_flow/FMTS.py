@@ -50,6 +50,8 @@ class CausalFlow(nn.Module):
 
 
     def output(self, x, t, history, prototypes, self_attn_masks, cross_attn_masks):
+        print(history.shape)
+        print(self_attn_masks.shape)
         breakpoint()
         if self_attn_masks is not None:
             history = history * self_attn_masks.unsqueeze(-1)
@@ -319,7 +321,6 @@ class CausalFlow(nn.Module):
 
         z_t = t * z1 + (1. - t) * z0
         target = z1 - z0
-        breakpoint()
         model_out = self.output(
             z_t,
             t.view(-1) * self.time_scalar,
