@@ -41,8 +41,8 @@ def get_args():
     parser.add_argument("--n_heads", type=int, required=True)
 
     """data parameters"""
-    parser.add_argument("--train_data_path", type=json.loads, required=True)
-    parser.add_argument("--valid_data_path", type=json.loads, required=True)
+    parser.add_argument("--train_data_path", type=str, required=True)
+    parser.add_argument("--valid_data_path", type=str, required=True)
 
     """training parameters"""
     parser.add_argument("--lr", type=float, required=True)
