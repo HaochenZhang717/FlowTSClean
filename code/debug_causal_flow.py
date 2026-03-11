@@ -232,11 +232,11 @@ def conditional_trian(args):
 
 
     train_loader = torch.utils.data.DataLoader(
-        train_set, batch_size=args.batch_size, num_workers=16,
+        train_set, batch_size=args.batch_size, num_workers=0,
         shuffle=True, drop_last=True, collate_fn=text2ts_collate_fn
     )
     val_loader = torch.utils.data.DataLoader(
-        val_set, batch_size=args.batch_size, num_workers=16,
+        val_set, batch_size=args.batch_size, num_workers=0,
         shuffle=False, drop_last=False, collate_fn=text2ts_collate_fn
     )
 
