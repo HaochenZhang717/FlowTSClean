@@ -104,7 +104,6 @@ def unconditional_trian(args):
     device = torch.device(f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu")
     trainer = DSPFlowTrainer(
         optimizer=optimizer,
-        scheduler=scheduler,
         model=model,
         train_loader=train_loader,
         val_loader=val_loader,
@@ -115,8 +114,6 @@ def unconditional_trian(args):
         wandb_project_name=args.wandb_project,
         grad_clip_norm=args.grad_clip_norm,
         grad_accum_steps=args.grad_accum_steps,
-        early_stop=args.early_stop,
-        patience=args.patience,
     )
 
     trainer.uncond_train(config=vars(args))
