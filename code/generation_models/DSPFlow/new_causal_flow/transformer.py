@@ -415,7 +415,6 @@ class DecoderBlock(nn.Module):
 
         self.ln1 = AdaLayerNorm(n_embd, proto_dim)
         self.ln2 = nn.LayerNorm(n_embd)
-        # self.ln2 = AdaLayerNorm(n_embd)
 
         self.attn1 = FullAttention(
             n_embed=n_embd,
@@ -574,6 +573,9 @@ class Transformer(nn.Module):
         )
 
         res = self.inverse(output)
+        print(f"res.shape: {res.shape}")
+        print(f"output.shape: {output.shape}")
+        breakpoint()
         res_m = torch.mean(res, dim=1, keepdim=True)
         season_error = self.combine_s(season.transpose(1, 2)).transpose(1, 2) + res - res_m
         trend = self.combine_m(mean) + res_m + trend
