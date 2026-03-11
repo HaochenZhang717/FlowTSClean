@@ -316,7 +316,7 @@ class CrossAttention(nn.Module):
         out = out.transpose(1, 2).reshape(B, Nq, C)
         out = self.proj(out)
         out = self.proj_drop(out)
-        return out
+        return out, None
 
 
 class EncoderBlock(nn.Module):
