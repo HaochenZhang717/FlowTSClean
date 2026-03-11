@@ -32,7 +32,7 @@ WANDB_RUN="synth_u"
 # =============================
 # Run training
 # =============================
-python uncond_train.py \
+python cond_train.py \
     --seq_len 128 \
     --feature_size 1 \
     \
