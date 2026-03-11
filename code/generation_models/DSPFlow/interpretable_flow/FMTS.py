@@ -12,9 +12,8 @@ class DSPFlow(nn.Module):
     def __init__(
             self,
             seq_length,
-            # vqvae_seq_len,
-            # num_codes,
             feature_size,
+            proto_dim=2048,
             n_layer_enc=3,
             n_layer_dec=6,
             d_model=None,
@@ -35,7 +34,7 @@ class DSPFlow(nn.Module):
             n_feat=feature_size, n_channel=seq_length, n_layer_enc=n_layer_enc, n_layer_dec=n_layer_dec,
             n_heads=n_heads, attn_pdrop=attn_pd, resid_pdrop=resid_pd, mlp_hidden_times=mlp_hidden_times,
             max_len=seq_length, n_embd=d_model, conv_params=[kernel_size, padding_size],
-            proto_dim=32
+            proto_dim=proto_dim,
         )
         # self.vqvae = VQVAE(
         #     in_channels=feature_size,
@@ -232,29 +231,32 @@ class DSPFlow(nn.Module):
 
 
     def forward(self, batch, mode):
-        if mode=="no_context":
-            signals = batch["signals"]
-            attn_mask=batch["attn_mask"]
-            return self._no_context_loss(signals, attn_mask)
+        # if mode=="no_context":
+        #     signals = batch["signals"]
+        #     attn_mask=batch["attn_mask"]
+        #     return self._no_context_loss(signals, attn_mask)
+        #
+        # elif mode=="imputation":
+        #     signals = batch["signals"]
+        #     missing_signals = batch["missing_signals"]
+        #     missing_signals_mask = batch["missing_signals_mask"]
+        #     attn_mask=batch["attn_mask"]
+        #     noise_mask=batch["noise_mask"]
+        #     return self._imputation_loss(signals, missing_signals, missing_signals_mask, attn_mask, noise_mask)
 
-        elif mode=="imputation":
-            signals = batch["signals"]
-            missing_signals = batch["missing_signals"]
-            missing_signals_mask = batch["missing_signals_mask"]
-            attn_mask=batch["attn_mask"]
-            noise_mask=batch["noise_mask"]
-            return self._imputation_loss(signals, missing_signals, missing_signals_mask, attn_mask, noise_mask)
-
-        elif mode=="no_context_no_code":
+        if mode=="uncond":
             # signals = batch["signals"]
             # attn_mask = batch["attn_mask"]
-            return self._no_context_no_code_loss(signals=batch, attn_mask=None)
+            return self._uncond_loss(signals=batch, attn_mask=None)
 
-        elif mode=="no_code_imputation":
-            signals = batch["signals"]
-            attn_mask = batch["attn_mask"]
-            noise_mask = batch["noise_mask"]
-            return self._no_code_imputation_loss(signals, attn_mask, noise_mask)
+        elif mode=="cond":
+            return self._cond_loss(batch)
+
+        # elif mode=="no_code_imputation":
+        #     signals = batch["signals"]
+        #     attn_mask = batch["attn_mask"]
+        #     noise_mask = batch["noise_mask"]
+        #     return self._no_code_imputation_loss(signals, attn_mask, noise_mask)
 
         else:
             raise NotImplementedError("No such mode")
@@ -298,7 +300,7 @@ class DSPFlow(nn.Module):
         return loss
 
 
-    def _no_context_no_code_loss(self, signals, attn_mask):
+    def _uncond_loss(self, signals, attn_mask):
         # here we only take signals and attn_mask, we do discrete-code conditioned generation without context
         # to unify the length, we padded the signals in the dataset, this is why we need attn_mask
         # batch_size = signals.shape[0]
@@ -336,6 +338,41 @@ class DSPFlow(nn.Module):
         else:
             loss = (model_out - target) ** 2
             loss = loss.mean()
+
+        return loss
+
+
+    def _cond_loss(self, batch):
+        # here we only take signals and attn_mask, we do discrete-code conditioned generation without context
+        # to unify the length, we padded the signals in the dataset, this is why we need attn_mask
+        # batch_size = signals.shape[0]
+        # with torch.no_grad():
+            # prototype_embeds = self.vqvae.encode(signals)
+        # prototype_embeds = prototype_embeds.reshape(batch_size, -1)
+
+        signals = batch['ts']
+        attn_mask = None
+
+        z0 = torch.randn_like(signals)
+        z1 = signals
+
+        t = torch.rand(z0.shape[0], 1, 1).to(z0.device)
+        if str(os.environ.get('hucfg_t_sampling', 'uniform')) == 'logitnorm':
+            t = torch.sigmoid(torch.randn(z0.shape[0], 1, 1)).to(z0.device)
+
+        z_t = t * z1 + (1. - t) * z0
+        target = z1 - z0
+        model_out = self.output(
+            z_t,
+            t.view(-1) * self.time_scalar,
+            prototypes=batch['text_embed'],
+            padding_masks=attn_mask)
+
+        # -------- length-aware mask --------
+        # mask: [B, T, 1]
+
+        loss = (model_out - target) ** 2
+        loss = loss.mean()
 
         return loss
 
