@@ -307,8 +307,8 @@ class CrossAttention(nn.Module):
         q = q.to(v.dtype)
         k = k.to(v.dtype)
 
-        print(attn_mask.shape)
-        breakpoint()
+        # print(attn_mask.shape)
+        # breakpoint()
         out = F.scaled_dot_product_attention(
             q, k, v,
             dropout_p=self.attn_drop.p if self.training else 0.,
@@ -572,9 +572,9 @@ class Transformer(nn.Module):
         )
 
         res = self.inverse(output)
-        print(f"res.shape: {res.shape}")
-        print(f"output.shape: {output.shape}")
-        breakpoint()
+        # print(f"res.shape: {res.shape}")
+        # print(f"output.shape: {output.shape}")
+        # breakpoint()
         res_m = torch.mean(res, dim=1, keepdim=True)
         season_error = self.combine_s(season.transpose(1, 2)).transpose(1, 2) + res - res_m
         trend = self.combine_m(mean) + res_m + trend

@@ -93,19 +93,12 @@ def text2ts_collate_fn(batch):
     return {
 
         "history": history,    # (B,C,N_enc)
-
         "target": target,      # (B,C,N_dec)
-
         "text_embed": text_embed,
-
         "encoder_self_mask": encoder_self_mask.bool(),
-
-        "decoder_self_mask": decoder_self_mask.bool(),
-
+        # "decoder_self_mask": decoder_self_mask.bool(),
         "cross_attn_mask": cross_attn_mask.bool(),
-
         "hist_mask": hist_mask,
-
         "tgt_mask": tgt_mask,
     }
 
