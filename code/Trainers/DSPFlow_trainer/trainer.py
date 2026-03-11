@@ -360,8 +360,8 @@ class DSPFlowTrainer(object):
 
                     loss = self.ema_model(batch, mode="cond")
 
-                    val_total += loss.item() * batch['ts'].shape[0]
-                    val_seen += batch['ts'].shape[0]
+                    val_total += loss.item() * batch['target'].shape[0]
+                    val_seen += batch['target'].shape[0]
 
                 val_total /= val_seen
 
