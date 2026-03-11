@@ -45,4 +45,6 @@ python uncond_train.py \
     --wandb_project $WANDB_PROJECT \
     --wandb_run $WANDB_RUN \
     \
-    --gpu_id 0
+    --gpu_id 0 \
+    \
+    --ckpt_dir ${CKPT_DIR}

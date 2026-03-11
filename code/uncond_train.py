@@ -59,6 +59,7 @@ def get_args():
 
     """gpu parameters"""
     parser.add_argument("--gpu_id", type=int, required=True)
+    parser.add_argument("--ckpt_dir", type=str, required=True)
 
     return parser.parse_args()
 
