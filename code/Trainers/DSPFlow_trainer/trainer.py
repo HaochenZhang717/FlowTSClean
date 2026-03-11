@@ -30,6 +30,10 @@ class DSPFlowTrainer(object):
         self.early_stop = early_stop
         self.patience = patience
 
+        if torch.cuda.is_available():
+            print("Compiling model...")
+            self.model = torch.compile(self.model)
+
 
     def uncond_train(self, config):
         ema_decay = 0.999
