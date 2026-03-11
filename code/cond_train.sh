@@ -27,7 +27,7 @@ CKPT_DIR="/playpen/haochenz/FlowTS/unconditional/synth_u_0310"
 # WandB
 # =============================
 WANDB_PROJECT="FlowTS"
-WANDB_RUN="synth_u"
+WANDB_RUN="synth_u_text"
 
 # =============================
 # Run training
