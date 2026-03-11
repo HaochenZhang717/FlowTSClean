@@ -357,7 +357,7 @@ class EncoderBlock(nn.Module):
 
     def forward(self, x, timestep, prototype_embeds, mask):
         # breakpoint()
-        a, att = self.attn(self.ln1(x, timestep, prototype_embeds), mask=mask)
+        a, att = self.attn(self.ln1(x, timestep, prototype_embeds), attn_mask=mask)
         x = x + a
         x = x + self.mlp(self.ln2(x))  # only one really use encoder_output
         return x, att
@@ -456,10 +456,10 @@ class DecoderBlock(nn.Module):
         self.linear = nn.Linear(n_embd, n_feat)
 
     def forward(self, x, encoder_output, timestep, prototype_embeds, mask):
-        a, att = self.attn1(self.ln1(x, timestep, prototype_embeds), mask=mask)
+        a, att = self.attn1(self.ln1(x, timestep, prototype_embeds), attn_mask=mask)
         x = x + a
 
-        a, att = self.attn2(self.ln1_1(x, timestep, prototype_embeds), encoder_output, mask=mask)
+        a, att = self.attn2(self.ln1_1(x, timestep, prototype_embeds), encoder_output, attn_mask=mask)
         x = x + a
         x1, x2 = self.proj(x).chunk(2, dim=-1)
 
