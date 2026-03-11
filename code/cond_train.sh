@@ -45,7 +45,7 @@ python cond_train.py \
     --valid_ts_path ${TS_PATH_VALID} \
     --valid_embed_path ${TEXT_EMBED_PATH_VALID} \
     \
-    --lr 1e-4 \
+    --lr 5e-4 \
     --batch_size 64 \
     --max_epochs 1000 \
     --grad_clip_norm 1.0 \
