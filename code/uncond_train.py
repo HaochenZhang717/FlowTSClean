@@ -119,7 +119,7 @@ def unconditional_trian(args):
         patience=args.patience,
     )
 
-    trainer.no_context_no_code_train(config=vars(args))
+    trainer.uncond_train(config=vars(args))
 
 
 
