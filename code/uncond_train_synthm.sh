@@ -29,7 +29,7 @@ WANDB_RUN="synthetic_m"
 # =============================
 python uncond_train.py \
     --seq_len 128 \
-    --feature_size 6 \
+    --feature_size 2 \
     \
     --n_layer_enc 4 \
     --n_layer_dec 4 \
