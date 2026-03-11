@@ -324,14 +324,18 @@ class DSPFlow(nn.Module):
         # -------- length-aware mask --------
         # mask: [B, T, 1]
         B, T, C = signals.shape
-        lengths = attn_mask.sum(1)
-        # -------- masked MSE --------
-        loss = (model_out - target) ** 2
-        loss = loss.sum(2)
-        loss = loss * attn_mask.to(dtype=torch.float32)
-        # normalize by valid length
-        loss = loss.sum(dim=1) / (lengths.float() * C)
-        loss = loss.mean()
+        if attn_mask is not None:
+            lengths = attn_mask.sum(1)
+            # -------- masked MSE --------
+            loss = (model_out - target) ** 2
+            loss = loss.sum(2)
+            loss = loss * attn_mask.to(dtype=torch.float32)
+            # normalize by valid length
+            loss = loss.sum(dim=1) / (lengths.float() * C)
+            loss = loss.mean()
+        else:
+            loss = (model_out - target) ** 2
+            loss = loss.mean()
 
         return loss
 
