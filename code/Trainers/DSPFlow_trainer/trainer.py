@@ -85,8 +85,7 @@ class DSPFlowTrainer(object):
                 val_total, val_seen = 0, 0
                 # for batch in self.val_loader:
                 for batch in tqdm(self.val_loader, desc=f"Eval Epoch {epoch}"):
-                    batch["signals"] = batch["signals"].to(dtype=model_dtype, device=self.device)
-                    batch["attn_mask"] = batch["attn_mask"].to(dtype=torch.bool, device=self.device)
+                    batch = batch[0].to(dtype=model_dtype, device=self.device)
                     loss = self.model(batch, mode="no_context_no_code")
                     val_total += loss.item() * batch["signals"].shape[0]
                     val_seen += batch["signals"].shape[0]
