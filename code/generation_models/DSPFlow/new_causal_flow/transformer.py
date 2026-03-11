@@ -207,6 +207,7 @@ class FullAttention(nn.Module):
         self.proj_drop = nn.Dropout(proj_pdrop)
 
     def forward(self, x: torch.Tensor, rope=None, attn_mask=None) -> torch.Tensor:
+        breakpoint()
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)
