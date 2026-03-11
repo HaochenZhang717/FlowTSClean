@@ -13,16 +13,16 @@ export hucfg_num_steps="100"
 # =============================
 # Paths
 # =============================
-TRAIN_DATA="/playpen/haochenz/LitsDatasets/128_len_ts/etth1/train_ts.npy"
-VALID_DATA="/playpen/haochenz/LitsDatasets/128_len_ts/etth1/valid_ts.npy"
-CKPT_DIR="/playpen/haochenz/FlowTS/unconditional/etth1_0311"
+TRAIN_DATA="/playpen/haochenz/LitsDatasets/128_len_ts/ETTh1/train_ts.npy"
+VALID_DATA="/playpen/haochenz/LitsDatasets/128_len_ts/ETTh1/valid_ts.npy"
+CKPT_DIR="/playpen/haochenz/FlowTS/unconditional/ETTh1_0311"
 
 
 # =============================
 # WandB
 # =============================
 WANDB_PROJECT="FlowTS"
-WANDB_RUN="etth1"
+WANDB_RUN="ETTh1"
 
 # =============================
 # Run training
