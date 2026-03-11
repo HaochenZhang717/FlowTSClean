@@ -56,7 +56,7 @@ def uncond_sample(args):
     model.to(device=device)
     model.eval()
 
-    test_data = torch.from_numpy(np.load(args.data_path, allow_pickle=True))
+    test_data = torch.from_numpy(np.load(args.test_data_path, allow_pickle=True))
     test_set = TensorDataset(test_data)
 
     test_loader = torch.utils.data.DataLoader(
