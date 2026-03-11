@@ -460,7 +460,6 @@ class DecoderBlock(nn.Module):
         x = x + a
         x1, x2 = self.proj(x).chunk(2, dim=-1)
 
-        breakpoint()
         trend, season = self.trend(x1), self.seasonal(x2)
         x = x + self.mlp(self.ln2(x))
 
