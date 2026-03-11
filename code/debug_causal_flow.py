@@ -133,7 +133,7 @@ class Text2TSDataset(Dataset):
 
         start = block_id * self.seg_len
         end = (block_id + 1) * self.seg_len
-
+        breakpoint()
         history = ts[:end]           # encoder
         target = ts[start:end]       # decoder
 
