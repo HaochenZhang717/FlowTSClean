@@ -196,8 +196,8 @@ class DSPFlowTrainer(object):
             # ==========================
             for batch in tqdm(self.train_loader, desc=f"Train Epoch {epoch}"):
 
-                batch = batch[0].to(dtype=model_dtype, device=self.device)
-
+                # batch = batch[0].to(dtype=model_dtype, device=self.device)
+                batch = {k: v.to(dtype=model_dtype, device=self.device) for k, v in batch.items()}
                 loss = self.model(batch, mode="cond")
 
                 total_loss += loss.item()
@@ -236,7 +236,8 @@ class DSPFlowTrainer(object):
 
                 for batch in tqdm(self.val_loader, desc=f"Eval Epoch {epoch}"):
 
-                    batch = batch[0].to(dtype=model_dtype, device=self.device)
+                    # batch = batch[0].to(dtype=model_dtype, device=self.device)
+                    batch = {k: v.to(dtype=model_dtype, device=self.device) for k, v in batch.items()}
 
                     loss = self.ema_model(batch, mode="cond")
 
