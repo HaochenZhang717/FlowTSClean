@@ -9,14 +9,16 @@ from metrics.predictive_metrics import predictive_score_metrics
 def calculate_scores_from_real_language(pt_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = torch.load(pt_path, map_location=device)
-    real = []
-    fake = []
-    for datum in data:
-        real.append(datum["reals"])
-        fake.append(datum["samples"])
-    real = torch.stack(real)
-    fake = torch.stack(fake)
+    # real = []
+    # fake = []
+    # for datum in data:
+    #     real.append(datum["reals"])
+    #     fake.append(datum["samples"])
+    # real = torch.stack(real)
+    # fake = torch.stack(fake)
 
+    real = data["reals"]
+    fake = data["samples"]
     real = real.permute(0, 2, 1)
     fake = fake.permute(0, 2, 1)
     print("Real shape:", real.shape)
