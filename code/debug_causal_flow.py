@@ -30,7 +30,7 @@ def text2ts_collate_fn(batch):
     histories = [b["history"] for b in batch]
     targets   = [b["target"]  for b in batch]
 
-    text_embed = torch.stack([b["text_embed"] for b in batch])
+    text_embed = torch.stack([b["text_embed"] for b in batch]).mean(dim=1)
 
     # ------------------------------------------------
     # pad history
