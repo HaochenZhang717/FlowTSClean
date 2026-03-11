@@ -53,7 +53,7 @@ class DSPFlowTrainer(object):
             self.model.train()
             self.optimizer.zero_grad()
             for batch in tqdm(self.train_loader, desc=f"Train Epoch {epoch}"):
-
+                breakpoint()
                 batch = batch.to(dtype=model_dtype, device=self.device)
                 # batch["signals"] = batch["signals"].to(dtype=model_dtype, device=self.device)
                 # batch["attn_mask"] = batch["attn_mask"].to(dtype=torch.bool, device=self.device)
