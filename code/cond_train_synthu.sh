@@ -3,7 +3,7 @@
 # =============================
 # GPU
 # =============================
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=2
 export hucfg_t_sampling="logitnorm"
 export hucfg_num_steps="100"
 
