@@ -307,7 +307,8 @@ class CrossAttention(nn.Module):
         q = q.to(v.dtype)
         k = k.to(v.dtype)
 
-
+        print(attn_mask.shape)
+        breakpoint()
         out = F.scaled_dot_product_attention(
             q, k, v,
             dropout_p=self.attn_drop.p if self.training else 0.,
@@ -453,7 +454,7 @@ class DecoderBlock(nn.Module):
         self.linear = nn.Linear(n_embd, n_feat)
 
     def forward(self, x, encoder_output, timestep, prototype_embeds, mask):
-        a, att = self.attn1(self.ln1(x, timestep, prototype_embeds), attn_mask=mask)
+        a, att = self.attn1(self.ln1(x, timestep, prototype_embeds), attn_mask=None)
         x = x + a
 
         a, att = self.attn2(self.ln1_1(x, timestep, prototype_embeds), encoder_output, attn_mask=mask)
@@ -535,7 +536,8 @@ class Transformer(nn.Module):
             proto_dim=1234,
     ):
         super().__init__()
-        self.emb = Conv_MLP(n_feat, n_embd, resid_pdrop=resid_pdrop)
+        self.encoder_emb = Conv_MLP(n_feat, n_embd, resid_pdrop=resid_pdrop)
+        self.decoder_emb = Conv_MLP(n_feat, n_embd, resid_pdrop=resid_pdrop)
         self.inverse = Conv_MLP(n_embd, n_feat, resid_pdrop=resid_pdrop)
 
         if conv_params is None or conv_params[0] is None:
@@ -560,15 +562,13 @@ class Transformer(nn.Module):
                                max_len=self.max_len,
                                proto_dim=proto_dim)
 
-    def forward(self, input, t, prototype_embeds, padding_masks):
-        emb = self.emb(input)
+    def forward(self, input, t, history, prototype_embeds, self_attn_mask, cross_attn_mask):
+        inp_enc = self.encoder_emb(history)
+        enc_cond = self.encoder(inp_enc, t, prototype_embeds, padding_masks=self_attn_mask)
 
-        inp_enc = emb
-        enc_cond = self.encoder(inp_enc, t, prototype_embeds, padding_masks=padding_masks)
-
-        inp_dec = emb
+        inp_dec = self.decoder_emb(input)
         output, mean, trend, season = self.decoder(
-            inp_dec, t, prototype_embeds, enc_cond, padding_masks=padding_masks
+            inp_dec, t, prototype_embeds, enc_cond, padding_masks=cross_attn_mask
         )
 
         res = self.inverse(output)

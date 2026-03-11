@@ -25,92 +25,139 @@ from torch.utils.data import TensorDataset, DataLoader
 
 def text2ts_collate_fn(batch):
 
-    ts = torch.stack([item["ts"] for item in batch], dim=0)                # (B, T, C)
-    text_embed = torch.stack([item["text_embed"] for item in batch], dim=0).mean(1) # (B, C, D)
+    B = len(batch)
+
+    C = batch[0]["history"].shape[1]
+
+    max_hist = max(x["history_len"] for x in batch)
+    max_tgt = max(x["target_len"] for x in batch)
+
+    history = torch.zeros(B, max_hist, C)
+    target = torch.zeros(B, max_tgt, C)
+
+    hist_mask = torch.zeros(B, max_hist)
+    tgt_mask = torch.zeros(B, max_tgt)
+
+    text_embed = torch.stack([x["text_embed"] for x in batch])
+
+    ts_id = torch.tensor([x["ts_id"] for x in batch])
+    block_id = torch.tensor([x["block_id"] for x in batch])
+
+    image_id = [x["image_id"] for x in batch]
+
+    for i, item in enumerate(batch):
+
+        h_len = item["history_len"]
+        t_len = item["target_len"]
+
+        history[i, :h_len] = item["history"]
+        target[i, :t_len] = item["target"]
+
+        hist_mask[i, :h_len] = 1
+        tgt_mask[i, :t_len] = 1
+
+    # ------------------------------------------------
+    # encoder self attention mask
+    # (B,N_enc,N_enc)
+    # ------------------------------------------------
+
+    attn_mask = hist_mask.unsqueeze(1) * hist_mask.unsqueeze(2)
+
+    # ------------------------------------------------
+    # cross attention mask
+    # (B,N_dec,N_enc)
+    # decoder query -> encoder key
+    # ------------------------------------------------
+
+    cross_attn_mask = tgt_mask.unsqueeze(2) * hist_mask.unsqueeze(1)
 
     batch_dict = {
-        "ts": ts,
+
+        "history": history.permute(0,2,1).contiguous(),   # (B,C,N_enc)
+        "target": target.permute(0,2,1).contiguous(),     # (B,C,N_dec)
+
         "text_embed": text_embed,
+
+        "attn_mask": attn_mask.bool(),                   # (B,N_enc,N_enc)
+        "cross_attn_mask": cross_attn_mask.bool(),       # (B,N_dec,N_enc)
+
+        "hist_mask": hist_mask,
+        "tgt_mask": tgt_mask,
+
+        "ts_id": ts_id,
+        "block_id": block_id,
+        "image_id": image_id,
     }
 
     return batch_dict
 
 
+
+
 class Text2TSDataset(Dataset):
-    """
-    Block-causal diffusion dataset.
-
-    原始:
-        self.ts: (N, T, C)
-
-    每个 __getitem__ 返回一个 (image, target_block) 的训练样本:
-        - ts:         (C, T)
-        - text_embed: (C, D)   # 只给 target block 的所有 channel text embedding
-        - loss_mask:  (T,)     # 只有 target block 对应区间为 1
-        - attn_mask: (T,)     # 只有 target block 对应区间为 1
-        - block_id:   int
-        - image_id:   str
-    """
 
     def __init__(
         self,
         ts_path: str,
         text_embed_path: str,
+        num_segments: int = 4,
     ):
-        self.ts = np.load(ts_path, allow_pickle=True)          # (N, T, C)
+        self.ts = np.load(ts_path, allow_pickle=True)   # (N, T, C)
         self.text_embed = torch.load(text_embed_path, map_location="cpu")
 
-
+        self.num_segments = num_segments
         self.N, self.T, self.C = self.ts.shape
 
-        # image ids from embedding dict, e.g. ["image0", "image1", ...]
+        assert self.T % num_segments == 0
+        self.seg_len = self.T // num_segments
+
         self.ids = sorted(
             self.text_embed.keys(),
-            key=lambda x: int(x.replace("image", "")))
+            key=lambda x: int(x.replace("image", ""))
+        )
+
+        self.num_block_choices = num_segments
 
     def __len__(self):
-        return len(self.ids)
+        return len(self.ids) * self.num_block_choices
 
     def __getitem__(self, idx):
 
-        image_id = self.ids[idx]
+        sample_idx = idx // self.num_block_choices
+        block_id = idx % self.num_block_choices
+
+        image_id = self.ids[sample_idx]
         ts_id = int(image_id.replace("image", ""))
 
-        # ts: (T, C)
-        ts = self.ts[ts_id]
+        ts = torch.from_numpy(self.ts[ts_id]).float()   # (T,C)
 
-        assert ts.shape[0] == self.T and ts.shape[1] == self.C
+        start = block_id * self.seg_len
+        end = (block_id + 1) * self.seg_len
 
-        # 转成 (C, T)，更适合大多数 diffusion model
-        ts = torch.from_numpy(ts).float()  # (C, T)
+        history = ts[:end]           # encoder
+        target = ts[start:end]       # decoder
 
-        # -----------------------------
-        # text condition:
-        # 只取 target block 的所有 channel embedding
-        # shape -> (C, D)
-        # -----------------------------
+        history_len = history.shape[0]
+        target_len = target.shape[0]
+
+        # text condition
         channel_embeds = []
-        for target_block in range(4):
-            for c in range(self.C):
-                key = f"seg{target_block + 1}_channel{c}"   # target_block 是 0-based, caption key 是 1-based
-                emb = self.text_embed[image_id][key]
-                channel_embeds.append(emb)
+        for c in range(self.C):
+            key = f"seg{block_id+1}_channel{c}"
+            channel_embeds.append(self.text_embed[image_id][key])
 
-        text_embed = torch.stack(channel_embeds, dim=0)   # (C, D)
+        text_embed = torch.stack(channel_embeds, dim=0)  # (C,D)
 
-        # -----------------------------
-        # 构造 masks
-        # -----------------------------
-
-        sample = {
-            "ts": ts,                     # (C, T)
-            "text_embed": text_embed,     # (C, D)
-            "image_id": image_id,
+        return {
+            "history": history,       # (N_enc,C)
+            "target": target,         # (N_dec,C)
+            "text_embed": text_embed,
+            "history_len": history_len,
+            "target_len": target_len,
             "ts_id": ts_id,
+            "block_id": block_id,
+            "image_id": image_id
         }
-
-        return sample
-
 
 def save_args_to_jsonl(args, output_path):
     args_dict = vars(args)
