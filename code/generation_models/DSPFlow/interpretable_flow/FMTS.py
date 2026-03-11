@@ -36,28 +36,6 @@ class DSPFlow(nn.Module):
             max_len=seq_length, n_embd=d_model, conv_params=[kernel_size, padding_size],
             proto_dim=proto_dim,
         )
-        # self.vqvae = VQVAE(
-        #     in_channels=feature_size,
-        #     encoder_channels=(64, 64, 64),
-        #     decoder_channels=(64, 64, 32, 32, 16, 16),
-        #     code_dim=8,
-        #     num_codes=num_codes,
-        #     down_ratio=1,
-        #     up_ratio=2,
-        #     code_len=4,
-        #     seq_len=vqvae_seq_len
-        # )
-        # # when debug i comment this out
-        # if not vqvae_ckpt.startswith("none"):
-        #     model_device = next(self.parameters()).device
-        #     pretrained_vqvae_ckpt = torch.load(vqvae_ckpt, map_location=model_device)
-        #     self.vqvae.load_state_dict(pretrained_vqvae_ckpt["model_state"])
-        #
-        # for param in self.vqvae.parameters():
-        #     param.requires_grad = False
-        #
-        # self.vqvae.eval()
-
 
         self.alpha = 3  ## t shifting, change to 1 is the uniform sampling during inference
         self.time_scalar = 1000 ## scale 0-1 to 0-1000 for time embedding
@@ -201,12 +179,8 @@ class DSPFlow(nn.Module):
         return zt
 
 
-    def no_context_generation(self, signals, attn_mask):
+    def uncond_generation(self, signals):
         self.eval()
-
-        batch_size = signals.shape[0]
-        prototype_embeds = self.vqvae.encode(signals, attn_mask)
-        prototype_embeds = prototype_embeds.reshape(batch_size, -1)
 
         zt = torch.randn_like(signals)
 
@@ -220,13 +194,10 @@ class DSPFlow(nn.Module):
             step = t_prev - t_curr
             t_input = torch.tensor([t_curr * self.time_scalar]).unsqueeze(0).repeat(zt.shape[0], 1).to(
                 signals.device).view(-1)
-            v = self.output(zt.clone(), t_input, prototype_embeds, attn_mask)
+            v = self.output(zt.clone(), t_input, None, None)
 
             # update missing region ONLY
             zt = zt + step * v
-            # restore known region
-            zt = zt * attn_mask.unsqueeze(-1)
-
         return zt
 
 

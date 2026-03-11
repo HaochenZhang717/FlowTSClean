@@ -92,14 +92,6 @@ def unconditional_trian(args):
 
     optimizer= torch.optim.Adam(model.parameters(), lr=args.lr)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode='min',
-        factor=0.8,  # multiply LR by 0.5
-        patience=1,  # wait 3 epochs with no improvement
-        threshold=1e-4,  # improvement threshold
-        min_lr=1e-5,  # min LR clamp
-    )
 
     device = torch.device(f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu")
     trainer = DSPFlowTrainer(
