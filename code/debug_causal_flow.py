@@ -256,8 +256,8 @@ def conditional_trian(args):
     )
 
     val_set = Text2TSDataset(
-        args.train_ts_path,
-        args.train_embed_path,
+        args.valid_ts_path,
+        args.valid_embed_path,
     )
 
 
