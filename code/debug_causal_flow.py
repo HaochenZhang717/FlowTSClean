@@ -133,8 +133,8 @@ class Text2TSDataset(Dataset):
 
         start = block_id * self.seg_len
         end = (block_id + 1) * self.seg_len
-        breakpoint()
-        history = ts[:end]           # encoder
+
+        history = ts[:start]           # encoder
         target = ts[start:end]       # decoder
 
         history_len = history.shape[0]
@@ -148,6 +148,7 @@ class Text2TSDataset(Dataset):
 
         text_embed = torch.stack(channel_embeds, dim=0)  # (C,D)
 
+        # breakpoint()
         return {
             "history": history,       # (N_enc,C)
             "target": target,         # (N_dec,C)
