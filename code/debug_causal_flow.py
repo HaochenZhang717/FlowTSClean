@@ -27,70 +27,87 @@ def text2ts_collate_fn(batch):
 
     B = len(batch)
 
-    C = batch[0]["history"].shape[1]
+    histories = [b["history"] for b in batch]
+    targets   = [b["target"]  for b in batch]
 
-    max_hist = max(x["history_len"] for x in batch)
-    max_tgt = max(x["target_len"] for x in batch)
-
-    history = torch.zeros(B, max_hist, C)
-    target = torch.zeros(B, max_tgt, C)
-
-    hist_mask = torch.zeros(B, max_hist)
-    tgt_mask = torch.zeros(B, max_tgt)
-
-    text_embed = torch.stack([x["text_embed"] for x in batch])
-
-    ts_id = torch.tensor([x["ts_id"] for x in batch])
-    block_id = torch.tensor([x["block_id"] for x in batch])
-
-    # image_id = torch.tensor([x["image_id"] for x in batch])
-
-    for i, item in enumerate(batch):
-
-        h_len = item["history_len"]
-        t_len = item["target_len"]
-
-        history[i, :h_len] = item["history"]
-        target[i, :t_len] = item["target"]
-
-        hist_mask[i, :h_len] = 1
-        tgt_mask[i, :t_len] = 1
+    text_embed = torch.stack([b["text_embed"] for b in batch])
 
     # ------------------------------------------------
-    # encoder self attention mask
-    # (B,N_enc,N_enc)
+    # pad history
     # ------------------------------------------------
 
-    attn_mask = hist_mask.unsqueeze(1) * hist_mask.unsqueeze(2)
+    max_hist = max(h.shape[0] for h in histories)
+
+    hist_pad = []
+    hist_mask = []
+
+    for h in histories:
+
+        n = h.shape[0]
+
+        pad = torch.zeros(max_hist-n, h.shape[1])
+
+        hist_pad.append(torch.cat([h,pad],0))
+
+        m = torch.zeros(max_hist)
+        m[:n] = 1
+        hist_mask.append(m)
+
+    history = torch.stack(hist_pad)       # (B,N_enc,C)
+    hist_mask = torch.stack(hist_mask)    # (B,N_enc)
 
     # ------------------------------------------------
-    # cross attention mask
-    # (B,N_dec,N_enc)
-    # decoder query -> encoder key
+    # pad target
     # ------------------------------------------------
+
+    max_tgt = max(t.shape[0] for t in targets)
+
+    tgt_pad = []
+    tgt_mask = []
+
+    for t in targets:
+
+        n = t.shape[0]
+
+        pad = torch.zeros(max_tgt-n, t.shape[1])
+
+        tgt_pad.append(torch.cat([t,pad],0))
+
+        m = torch.zeros(max_tgt)
+        m[:n] = 1
+        tgt_mask.append(m)
+
+    target = torch.stack(tgt_pad)         # (B,N_dec,C)
+    tgt_mask = torch.stack(tgt_mask)      # (B,N_dec)
+
+    # ------------------------------------------------
+    # build attention masks
+    # ------------------------------------------------
+
+    encoder_self_mask = hist_mask.unsqueeze(1) * hist_mask.unsqueeze(2)
+
+    decoder_self_mask = tgt_mask.unsqueeze(1) * tgt_mask.unsqueeze(2)
 
     cross_attn_mask = tgt_mask.unsqueeze(2) * hist_mask.unsqueeze(1)
 
-    batch_dict = {
+    return {
 
-        "history": history.permute(0,2,1).contiguous(),   # (B,C,N_enc)
-        "target": target.permute(0,2,1).contiguous(),     # (B,C,N_dec)
+        "history": history,    # (B,C,N_enc)
+
+        "target": target,      # (B,C,N_dec)
 
         "text_embed": text_embed,
 
-        "attn_mask": attn_mask.bool(),                   # (B,N_enc,N_enc)
-        "cross_attn_mask": cross_attn_mask.bool(),       # (B,N_dec,N_enc)
+        "encoder_self_mask": encoder_self_mask.bool(),
+
+        "decoder_self_mask": decoder_self_mask.bool(),
+
+        "cross_attn_mask": cross_attn_mask.bool(),
 
         "hist_mask": hist_mask,
+
         "tgt_mask": tgt_mask,
-
-        "ts_id": ts_id,
-        "block_id": block_id,
-        # "image_id": image_id,
     }
-
-    return batch_dict
-
 
 
 
@@ -98,67 +115,86 @@ class Text2TSDataset(Dataset):
 
     def __init__(
         self,
-        ts_path: str,
-        text_embed_path: str,
-        num_segments: int = 4,
+        ts_path,
+        text_embed_path,
+        num_segments=4,
     ):
-        self.ts = np.load(ts_path, allow_pickle=True)   # (N, T, C)
+        self.ts = np.load(ts_path)              # (N,T,C)
         self.text_embed = torch.load(text_embed_path, map_location="cpu")
 
         self.num_segments = num_segments
-        self.N, self.T, self.C = self.ts.shape
 
+        self.N, self.T, self.C = self.ts.shape
         assert self.T % num_segments == 0
-        self.seg_len = self.T // num_segments
+
+        self.segment_length = self.T // num_segments
 
         self.ids = sorted(
             self.text_embed.keys(),
-            key=lambda x: int(x.replace("image", ""))
+            key=lambda x: int(x.replace("image",""))
         )
 
-        self.num_block_choices = num_segments
+        self.block_ids = list(range(num_segments))
 
     def __len__(self):
-        return len(self.ids) * self.num_block_choices
+        return len(self.ids) * self.num_segments
 
     def __getitem__(self, idx):
 
-        sample_idx = idx // self.num_block_choices
-        block_id = idx % self.num_block_choices
+        sample_idx = idx // self.num_segments
+        block_id = idx % self.num_segments
 
         image_id = self.ids[sample_idx]
-        ts_id = int(image_id.replace("image", ""))
+        ts_id = int(image_id.replace("image",""))
 
         ts = torch.from_numpy(self.ts[ts_id]).float()   # (T,C)
 
-        start = block_id * self.seg_len
-        end = (block_id + 1) * self.seg_len
+        start = block_id * self.segment_length
+        end   = (block_id+1) * self.segment_length
 
-        history = ts[:start]           # encoder
-        target = ts[start:end]       # decoder
+        # ------------------------------------------------
+        # history tokens
+        # ------------------------------------------------
+
+        history = ts[:start]                 # (N_hist,C)
+
+        dummy = torch.zeros(1, self.C)
+
+        history = torch.cat([dummy, history], dim=0)  # (N_hist+1,C)
 
         history_len = history.shape[0]
-        target_len = target.shape[0]
 
-        # text condition
+        # ------------------------------------------------
+        # target tokens
+        # ------------------------------------------------
+
+        target = ts[start:end]               # (seg_len,C)
+
+        # ------------------------------------------------
+        # text embedding
+        # ------------------------------------------------
+
         channel_embeds = []
+
         for c in range(self.C):
+
             key = f"seg{block_id+1}_channel{c}"
-            channel_embeds.append(self.text_embed[image_id][key])
 
-        text_embed = torch.stack(channel_embeds, dim=0)  # (C,D)
+            emb = self.text_embed[image_id][key]
 
-        # breakpoint()
+            channel_embeds.append(emb)
+
+        text_embed = torch.stack(channel_embeds, dim=0)
+
         return {
-            "history": history,       # (N_enc,C)
-            "target": target,         # (N_dec,C)
+            "history": history,          # (N_hist+1,C)
+            "target": target,            # (seg_len,C)
             "text_embed": text_embed,
-            "history_len": history_len,
-            "target_len": target_len,
-            "ts_id": ts_id,
             "block_id": block_id,
-            # "image_id": image_id
+            # "image_id": image_id,
+            "ts_id": ts_id,
         }
+
 
 def save_args_to_jsonl(args, output_path):
     args_dict = vars(args)

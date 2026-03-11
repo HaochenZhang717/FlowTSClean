@@ -427,6 +427,7 @@ class DecoderBlock(nn.Module):
             n_embd=n_embd,
             condition_embd=condition_dim,
             n_head=n_head,
+            qkv_bias=False,
             qk_norm=True,
             attn_pdrop=attn_pdrop,
             proj_pdrop=resid_pdrop,

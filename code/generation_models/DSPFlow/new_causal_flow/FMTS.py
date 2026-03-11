@@ -321,6 +321,8 @@ class CausalFlow(nn.Module):
 
         z_t = t * z1 + (1. - t) * z0
         target = z1 - z0
+
+        breakpoint()
         model_out = self.output(
             z_t,
             t.view(-1) * self.time_scalar,
