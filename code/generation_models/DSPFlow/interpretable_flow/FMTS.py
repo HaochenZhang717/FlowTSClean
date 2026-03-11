@@ -343,12 +343,6 @@ class DSPFlow(nn.Module):
 
 
     def _cond_loss(self, batch):
-        # here we only take signals and attn_mask, we do discrete-code conditioned generation without context
-        # to unify the length, we padded the signals in the dataset, this is why we need attn_mask
-        # batch_size = signals.shape[0]
-        # with torch.no_grad():
-            # prototype_embeds = self.vqvae.encode(signals)
-        # prototype_embeds = prototype_embeds.reshape(batch_size, -1)
 
         signals = batch['ts']
         attn_mask = None
