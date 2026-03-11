@@ -21,8 +21,8 @@ def calculate_scores_from_real_language(pt_path):
     fake = data["samples"]
     print("Real shape:", real.shape)
     print("Fake shape:", fake.shape)
-    real = real.permute(0, 2, 1)
-    fake = fake.permute(0, 2, 1)
+    # real = real.permute(0, 2, 1)
+    # fake = fake.permute(0, 2, 1)
     discriminative_score = discriminative_score_metrics(
         real, fake,
         real.shape[-1],
