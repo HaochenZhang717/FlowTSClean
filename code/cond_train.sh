@@ -3,10 +3,9 @@
 # =============================
 # GPU
 # =============================
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=8
 export hucfg_t_sampling="logitnorm"
 export hucfg_num_steps="100"
-
 
 
 
@@ -20,7 +19,7 @@ TS_PATH_VALID="/playpen/haochenz/LitsDatasets/128_len_ts/synthetic_u/valid_ts.np
 TEXT_EMBED_PATH_VALID="/playpen/haochenz/LitsDatasets/128_len_caps_one_per_channel_0309/synth_u/valid_embeds.pt"
 
 
-CKPT_DIR="/playpen/haochenz/FlowTS/unconditional/synth_u_0310"
+CKPT_DIR="/playpen/haochenz/FlowTS/conditional/synth_u_0310"
 
 
 # =============================
