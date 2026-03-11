@@ -75,8 +75,8 @@ def uncond_sample(args):
             results["reals"].append(signal.cpu())
             results["samples"].append(sample.cpu())
 
-    results["reals"] = torch.cat(results["reals"])
-    results["samples"] = torch.cat(results["samples"])
+    results["reals"] = torch.stack(results["reals"])
+    results["samples"] = torch.stack(results["samples"])
     torch.save(results, args.output_path)
 
 
