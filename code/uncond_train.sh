@@ -4,6 +4,11 @@
 # GPU
 # =============================
 export CUDA_VISIBLE_DEVICES=0
+export hucfg_t_sampling="logitnorm"
+export hucfg_num_steps="100"
+
+
+
 
 # =============================
 # Paths
