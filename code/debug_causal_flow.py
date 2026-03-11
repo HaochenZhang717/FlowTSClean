@@ -43,7 +43,7 @@ def text2ts_collate_fn(batch):
     ts_id = torch.tensor([x["ts_id"] for x in batch])
     block_id = torch.tensor([x["block_id"] for x in batch])
 
-    image_id = torch.tensor([x["image_id"] for x in batch])
+    # image_id = torch.tensor([x["image_id"] for x in batch])
 
     for i, item in enumerate(batch):
 
@@ -86,7 +86,7 @@ def text2ts_collate_fn(batch):
 
         "ts_id": ts_id,
         "block_id": block_id,
-        "image_id": image_id,
+        # "image_id": image_id,
     }
 
     return batch_dict
