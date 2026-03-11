@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export hucfg_t_sampling="logitnorm"
+export hucfg_num_steps="100"
+
 TRAIN_DATA="/playpen/haochenz/LitsDatasets/128_len_ts/synthetic_u/train_ts.npy"
 VALID_DATA="/playpen/haochenz/LitsDatasets/128_len_ts/synthetic_u/valid_ts.npy"
 
@@ -9,9 +12,11 @@ WANDB_PROJECT="FlowTS"
 
 # hyperparameters
 LRS=(1e-4 3e-4 5e-4 1e-3)
-BATCHES=(32 64 128)
+BATCHES=(32 64 128 256)
 
 GPU_LIST=(1 2 3 4 6 7)
+
+NUM_GPU=${#GPU_LIST[@]}
 
 job_id=0
 
@@ -20,7 +25,7 @@ do
 for bs in "${BATCHES[@]}"
 do
 
-gpu=${GPU_LIST[$((job_id % 6))]}
+gpu=${GPU_LIST[$((job_id % NUM_GPU))]}
 
 run_name="synth_lr${lr}_bs${bs}"
 
@@ -58,8 +63,8 @@ python uncond_train.py \
 
 job_id=$((job_id+1))
 
-# 每8个任务等一轮
-if (( job_id % 8 == 0 ))
+# 等待一轮GPU跑完
+if (( job_id % NUM_GPU == 0 ))
 then
     wait
 fi
