@@ -329,7 +329,6 @@ class EncoderBlock(nn.Module):
                  resid_pdrop=0.1,
                  mlp_hidden_times=4,
                  activate='GELU',
-                 max_len=None,
                  proto_dim=1234,
                  ):
         super().__init__()

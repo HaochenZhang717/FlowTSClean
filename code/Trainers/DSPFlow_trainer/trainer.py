@@ -13,7 +13,8 @@ class DSPFlowTrainer(object):
             device, save_dir,
             wandb_project_name, wandb_run_name,
             grad_clip_norm,
-            grad_accum_steps
+            grad_accum_steps,
+            compile=True
     ):
         self.optimizer = optimizer
         self.model = model.to(device)
@@ -28,13 +29,14 @@ class DSPFlowTrainer(object):
         # -------------------------
         # compile only main model
         # -------------------------
-        if torch.cuda.is_available():
-            try:
-                print("Compiling model...")
-                self.model = torch.compile(self.model)
-            except Exception as e:
-                print("Compile failed, fallback to eager mode")
-                print(e)
+        if compile:
+            if torch.cuda.is_available():
+                try:
+                    print("Compiling model...")
+                    self.model = torch.compile(self.model)
+                except Exception as e:
+                    print("Compile failed, fallback to eager mode")
+                    print(e)
 
         self.train_loader = train_loader
         self.val_loader = val_loader
