@@ -49,10 +49,15 @@ class CausalFlow(nn.Module):
         print('Frozen proto_mlp')
 
 
-    def output(self, x, t, prototypes, padding_masks):
-        if padding_masks is not None:
-            x = x * padding_masks.unsqueeze(-1)
-        output = self.model(x, t, prototypes, padding_masks)
+    def output(self, x, t, history, prototypes, self_attn_masks, cross_attn_masks):
+        if self_attn_masks is not None:
+            history = history * self_attn_masks.unsqueeze(-1)
+        output = self.model(
+            x, t,
+            history,
+            prototypes,
+            self_attn_masks,
+            cross_attn_masks)
 
         return output
 
@@ -208,32 +213,11 @@ class CausalFlow(nn.Module):
 
 
     def forward(self, batch, mode):
-        # if mode=="no_context":
-        #     signals = batch["signals"]
-        #     attn_mask=batch["attn_mask"]
-        #     return self._no_context_loss(signals, attn_mask)
-        #
-        # elif mode=="imputation":
-        #     signals = batch["signals"]
-        #     missing_signals = batch["missing_signals"]
-        #     missing_signals_mask = batch["missing_signals_mask"]
-        #     attn_mask=batch["attn_mask"]
-        #     noise_mask=batch["noise_mask"]
-        #     return self._imputation_loss(signals, missing_signals, missing_signals_mask, attn_mask, noise_mask)
-
         if mode=="uncond":
-            # signals = batch["signals"]
-            # attn_mask = batch["attn_mask"]
             return self._uncond_loss(signals=batch, attn_mask=None)
 
         elif mode=="cond":
             return self._cond_loss(batch)
-
-        # elif mode=="no_code_imputation":
-        #     signals = batch["signals"]
-        #     attn_mask = batch["attn_mask"]
-        #     noise_mask = batch["noise_mask"]
-        #     return self._no_code_imputation_loss(signals, attn_mask, noise_mask)
 
         else:
             raise NotImplementedError("No such mode")
@@ -321,7 +305,8 @@ class CausalFlow(nn.Module):
 
     def _cond_loss(self, batch):
 
-        signals = batch['ts']
+        history = batch['history']
+        signals = batch['target']
         attn_mask = None
 
         z0 = torch.randn_like(signals)
@@ -336,8 +321,11 @@ class CausalFlow(nn.Module):
         model_out = self.output(
             z_t,
             t.view(-1) * self.time_scalar,
-            prototypes=batch['text_embed'],
-            padding_masks=attn_mask)
+            history,
+            batch['text_embed'],
+            batch["attn_mask"],
+            batch["cross_attn_mask"]
+        )
 
         # -------- length-aware mask --------
         # mask: [B, T, 1]
