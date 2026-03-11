@@ -12,8 +12,8 @@ class DSPFlow(nn.Module):
     def __init__(
             self,
             seq_length,
-            vqvae_seq_len,
-            num_codes,
+            # vqvae_seq_len,
+            # num_codes,
             feature_size,
             n_layer_enc=3,
             n_layer_dec=6,
@@ -24,7 +24,7 @@ class DSPFlow(nn.Module):
             resid_pd=0.,
             kernel_size=None,
             padding_size=None,
-            vqvae_ckpt="none",
+            # vqvae_ckpt="none",
     ):
         super(DSPFlow, self).__init__()
 
@@ -37,27 +37,27 @@ class DSPFlow(nn.Module):
             max_len=seq_length, n_embd=d_model, conv_params=[kernel_size, padding_size],
             proto_dim=32
         )
-        self.vqvae = VQVAE(
-            in_channels=feature_size,
-            encoder_channels=(64, 64, 64),
-            decoder_channels=(64, 64, 32, 32, 16, 16),
-            code_dim=8,
-            num_codes=num_codes,
-            down_ratio=1,
-            up_ratio=2,
-            code_len=4,
-            seq_len=vqvae_seq_len
-        )
-        # when debug i comment this out
-        if not vqvae_ckpt.startswith("none"):
-            model_device = next(self.parameters()).device
-            pretrained_vqvae_ckpt = torch.load(vqvae_ckpt, map_location=model_device)
-            self.vqvae.load_state_dict(pretrained_vqvae_ckpt["model_state"])
-
-        for param in self.vqvae.parameters():
-            param.requires_grad = False
-
-        self.vqvae.eval()
+        # self.vqvae = VQVAE(
+        #     in_channels=feature_size,
+        #     encoder_channels=(64, 64, 64),
+        #     decoder_channels=(64, 64, 32, 32, 16, 16),
+        #     code_dim=8,
+        #     num_codes=num_codes,
+        #     down_ratio=1,
+        #     up_ratio=2,
+        #     code_len=4,
+        #     seq_len=vqvae_seq_len
+        # )
+        # # when debug i comment this out
+        # if not vqvae_ckpt.startswith("none"):
+        #     model_device = next(self.parameters()).device
+        #     pretrained_vqvae_ckpt = torch.load(vqvae_ckpt, map_location=model_device)
+        #     self.vqvae.load_state_dict(pretrained_vqvae_ckpt["model_state"])
+        #
+        # for param in self.vqvae.parameters():
+        #     param.requires_grad = False
+        #
+        # self.vqvae.eval()
 
 
         self.alpha = 3  ## t shifting, change to 1 is the uniform sampling during inference

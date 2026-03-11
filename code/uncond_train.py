@@ -71,15 +71,12 @@ def unconditional_trian(args):
 
     model = DSPFlow(
         seq_length=args.seq_len,
-        vqvae_seq_len=args.max_infill_length,
-        num_codes=args.num_codes,
         feature_size=args.feature_size,
         n_layer_enc=args.n_layer_enc,
         n_layer_dec=args.n_layer_dec,
         d_model=args.d_model,
         n_heads=args.n_heads,
         mlp_hidden_times=4,
-        vqvae_ckpt=args.vqvae_ckpt
     )
 
     train_data = torch.from_numpy(np.load(args.train_data_path, allow_pickle=True))
