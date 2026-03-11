@@ -384,7 +384,6 @@ class Encoder(nn.Module):
             resid_pdrop=resid_pdrop,
             mlp_hidden_times=mlp_hidden_times,
             activate=block_activate,
-            max_len=max_len,
             proto_dim=proto_dim,
         ) for _ in range(n_layer)])
 
