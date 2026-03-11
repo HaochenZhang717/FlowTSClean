@@ -208,6 +208,7 @@ def conditional_trian(args):
         wandb_project_name=args.wandb_project,
         grad_clip_norm=args.grad_clip_norm,
         grad_accum_steps=args.grad_accum_steps,
+        compile=False
     )
 
     trainer.cond_train(config=vars(args))
